@@ -1,10 +1,12 @@
-package gsecrets
+package azure
 
 import (
 	"context"
 	"fmt"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azsecrets"
+	"github.com/MehrunesSky/gecrets/common"
+	"github.com/MehrunesSky/gecrets/keyvaults"
 	"log"
 )
 
@@ -47,19 +49,45 @@ func (v Vault) GetSecretIds() []string {
 	return ret
 }
 
-func (v Vault) SetSecretValue(key string, value string) {
+func (v Vault) GetSecrets(getSecretOption *keyvaults.GetSecretsOption) ([]common.Secret, error) {
+	var ret []common.Secret
+	pager := v.client.NewListSecretsPager(nil)
+	for pager.More() {
+		resp, err := pager.NextPage(context.TODO())
+		if err != nil {
+			return nil, err
+		}
+		for _, secret := range resp.SecretListResult.Value {
+			secretName := secret.ID.Name()
+			if getSecretOption == nil || getSecretOption.Regex.MatchString(secretName) {
+				value, err := v.GetSecretValue(secretName)
+				if err != nil {
+					return nil, err
+				}
+				contentType := ""
+
+				if secret.ContentType != nil {
+					contentType = *secret.ContentType
+				}
+
+				ret = append(
+					ret,
+					common.NewSecret(secretName, value, contentType),
+				)
+			}
+		}
+	}
+	return ret, nil
+}
+
+func (v Vault) SetSecretValue(key string, value string) error {
 	_, err := v.client.SetSecret(context.TODO(), key, azsecrets.SetSecretParameters{
 		Value: &value,
 	}, nil)
-	if err != nil {
-		log.Fatalf("failed to create a secret: %v", err)
-	}
+	return err
 }
 
-func (v Vault) GetSecretValue(id string) string {
+func (v Vault) GetSecretValue(id string) (string, error) {
 	resp, err := v.client.GetSecret(context.TODO(), id, "", nil)
-	if err != nil {
-		log.Fatalf("failed to get the secret: %v", err)
-	}
-	return *resp.Value
+	return *resp.Value, err
 }

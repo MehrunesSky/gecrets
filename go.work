@@ -1,0 +1,11 @@
+go 1.23.1
+
+use (
+	.
+	cmd
+	common
+	editors/vim
+	keyvaults/azure
+	utils
+	keyvaults
+)

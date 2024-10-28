@@ -1,19 +1,16 @@
-package gsecrets
+package vim
 
 import (
 	"bufio"
 	"fmt"
-	"github.com/MehrunesSky/gsecrets/utils"
+	"github.com/MehrunesSky/gecrets/common"
+	"github.com/MehrunesSky/gecrets/utils"
 	"log"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 )
-
-type Pair struct {
-	A, B string
-}
 
 type VimExec struct {
 	filepath string
@@ -57,11 +54,37 @@ func (v *VimExec) exec() {
 	}
 }
 
-func (v *VimExec) UpdateWithVim(pair []Pair) []Pair {
+func (v *VimExec) OpenWithVim(pair []common.Secret) {
 	s := strings.Builder{}
 
 	for _, p := range pair {
-		s.WriteString(fmt.Sprintf("%s=%s", p.A, p.B))
+		s.WriteString(fmt.Sprintf("%s=%s\n", p.Key, p.Value))
+	}
+
+	f, err := os.CreateTemp("", "")
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	defer func(name string) {
+		err := os.Remove(name)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}(f.Name())
+
+	v.filepath = f.Name()
+	v.writeToTemp(s.String())
+	v.exec()
+	v.writeToTemp(s.String())
+}
+
+func (v *VimExec) UpdateWithVim(pair []common.Secret) []common.Secret {
+	s := strings.Builder{}
+
+	for _, p := range pair {
+		s.WriteString(fmt.Sprintf("%s=%s\n", p.Key, p.Value))
 	}
 
 	f, err := os.CreateTemp("", "")
@@ -78,7 +101,7 @@ func (v *VimExec) UpdateWithVim(pair []Pair) []Pair {
 
 }
 
-func (v *VimExec) read(oPair []Pair) []Pair {
+func (v *VimExec) read(oPair []common.Secret) []common.Secret {
 	f, err := os.Open(v.filepath)
 	if err != nil {
 		log.Fatalln(err)
@@ -86,12 +109,12 @@ func (v *VimExec) read(oPair []Pair) []Pair {
 	b := bufio.NewScanner(f)
 
 	var re = regexp.MustCompile(`(?m)^\s*([\S]*)\s*=\s*([\S]*)\s*$`)
-	var pairs []Pair
+	var pairs []common.Secret
 	for b.Scan() {
 		for _, match := range re.FindAllStringSubmatch(b.Text(), -1) {
-			nP := Pair{
-				A: match[1],
-				B: match[2],
+			nP := common.Secret{
+				Key:   match[1],
+				Value: match[2],
 			}
 			if utils.NotContains(oPair, nP) {
 				pairs = append(pairs, nP)
