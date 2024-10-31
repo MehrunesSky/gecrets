@@ -36,7 +36,7 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return err
 		}
-		vim.NewVimExec().OpenWithVim(secrets)
+		vim.NewVimExec(v.GetSecretModel()).Open(secrets)
 
 		return nil
 	},

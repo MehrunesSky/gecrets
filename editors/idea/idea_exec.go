@@ -1,4 +1,4 @@
-package vim
+package idea
 
 import (
 	"github.com/MehrunesSky/gecrets/common"
@@ -8,17 +8,17 @@ import (
 	"os/exec"
 )
 
-type VimExec struct {
+type IdeaExec struct {
 	filepath string
 	model    common.SecretI
 }
 
-func NewVimExec(model common.SecretI) *VimExec {
-	return &VimExec{model: model}
+func NewIdeaExec(model common.SecretI) *IdeaExec {
+	return &IdeaExec{model: model}
 }
 
-func (v *VimExec) exec() {
-	cmd := exec.Command("vim", v.filepath)
+func (v *IdeaExec) exec() {
+	cmd := exec.Command("idea --wait", v.filepath)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	err := cmd.Run()
@@ -27,12 +27,12 @@ func (v *VimExec) exec() {
 	}
 }
 
-func (v *VimExec) Open(secrets []common.SecretI) {
+func (v *IdeaExec) Open(secrets []common.SecretI) {
 	v.filepath = editorUtils.WriteTempFile(v.model, secrets)
 	v.exec()
 }
 
-func (v *VimExec) Update(secrets []common.SecretI) []common.SecretI {
+func (v *IdeaExec) Update(secrets []common.SecretI) []common.SecretI {
 	v.filepath = editorUtils.WriteTempFile(v.model, secrets)
 
 	v.exec()

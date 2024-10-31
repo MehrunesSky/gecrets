@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/MehrunesSky/gecrets/cmd/list"
 	"github.com/MehrunesSky/gecrets/cmd/update"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -40,7 +41,16 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringP("ks", "", "", "name of keystore")
-	rootCmd.MarkFlagRequired("ks")
+	err := rootCmd.MarkPersistentFlagRequired("ks")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	rootCmd.PersistentFlags().StringP("editor", "e", "", "Editor")
+	err = rootCmd.MarkPersistentFlagRequired("editor")
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

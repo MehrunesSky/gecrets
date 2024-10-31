@@ -15,6 +15,10 @@ type Vault struct {
 	client       *azsecrets.Client
 }
 
+func (v Vault) GetSecretModel() common.SecretI {
+	return &AzureSecret{}
+}
+
 func NewVault(keyVaultName string) Vault {
 	keyVaultURL := fmt.Sprintf("https://%s.vault.azure.net/", keyVaultName)
 	//Create a credential using the NewDefaultAzureCredential type.
@@ -49,8 +53,8 @@ func (v Vault) GetSecretIds() []string {
 	return ret
 }
 
-func (v Vault) GetSecrets(getSecretOption *keyvaults.GetSecretsOption) ([]common.Secret, error) {
-	var ret []common.Secret
+func (v Vault) GetSecrets(getSecretOption *keyvaults.GetSecretsOption) ([]common.SecretI, error) {
+	var ret []common.SecretI
 	pager := v.client.NewListSecretsPager(nil)
 	for pager.More() {
 		resp, err := pager.NextPage(context.TODO())
@@ -72,7 +76,7 @@ func (v Vault) GetSecrets(getSecretOption *keyvaults.GetSecretsOption) ([]common
 
 				ret = append(
 					ret,
-					common.NewSecret(secretName, value, contentType),
+					NewAzureSecret(secretName, value, contentType),
 				)
 			}
 		}
@@ -80,10 +84,15 @@ func (v Vault) GetSecrets(getSecretOption *keyvaults.GetSecretsOption) ([]common
 	return ret, nil
 }
 
-func (v Vault) SetSecretValue(key string, value string) error {
-	_, err := v.client.SetSecret(context.TODO(), key, azsecrets.SetSecretParameters{
-		Value: &value,
-	}, nil)
+func (v Vault) SetSecretValue(secretI common.SecretI) error {
+	secret := secretI.(AzureSecret)
+	_, err := v.client.SetSecret(
+		context.TODO(),
+		secret.Key,
+		azsecrets.SetSecretParameters{
+			Value:       &secret.Value,
+			ContentType: &secret.ContentType,
+		}, nil)
 	return err
 }
 

@@ -8,4 +8,7 @@ use (
 	keyvaults/azure
 	utils
 	keyvaults
+	editors/utils
+	editors
+	editors/idea
 )

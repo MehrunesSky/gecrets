@@ -11,7 +11,8 @@ type GetSecretsOption struct {
 
 type KeyVaultService interface {
 	GetSecretIds() []string
-	GetSecrets(getSecretOption *GetSecretsOption) ([]common.Secret, error)
-	SetSecretValue(key string, value string) error
+	GetSecrets(getSecretOption *GetSecretsOption) ([]common.SecretI, error)
+	SetSecretValue(secretI common.SecretI) error
 	GetSecretValue(id string) (string, error)
+	GetSecretModel() common.SecretI
 }

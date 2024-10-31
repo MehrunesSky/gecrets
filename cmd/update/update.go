@@ -6,7 +6,7 @@ package update
 import (
 	"fmt"
 	"github.com/MehrunesSky/gecrets/common"
-	"github.com/MehrunesSky/gecrets/editors/vim"
+	"github.com/MehrunesSky/gecrets/editors"
 	"github.com/MehrunesSky/gecrets/keyvaults"
 	"github.com/MehrunesSky/gecrets/keyvaults/azure"
 	"github.com/MehrunesSky/gecrets/utils"
@@ -14,8 +14,6 @@ import (
 	"log"
 	"regexp"
 )
-
-var keystore string
 
 var regex string
 
@@ -30,7 +28,9 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		v := azure.NewVault("mehr")
+		ks, _ := cmd.Flags().GetString("ks")
+		editorName, _ := cmd.Flags().GetString("editor")
+		v := azure.NewVault(ks)
 		var secretOptions *keyvaults.GetSecretsOption
 		if regex != "" {
 			secretOptions = &keyvaults.GetSecretsOption{Regex: regexp.MustCompile(regex)}
@@ -41,13 +41,17 @@ to quickly create a Cobra application.`,
 			return err
 		}
 
-		nPairs := vim.NewVimExec().UpdateWithVim(pairs)
+		editor, err := editors.GetEditorByName(editorName, v.GetSecretModel())
+		if err != nil {
+			return err
+		}
+		nPairs := editor.Update(pairs)
 
 		printSecretsChange(pairs, nPairs)
 
 		if utils.PromptYesNo("Would you like to apply this change?") {
 			for _, p := range nPairs {
-				v.SetSecretValue(p.Key, p.Value)
+				v.SetSecretValue(p)
 			}
 		} else {
 			log.Println("NO")
@@ -57,39 +61,33 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func printSecretsChange(oldSecrets, newSecrets []common.Secret) {
+func printSecretsChange(oldSecrets, newSecrets []common.SecretI) {
 	fmt.Println("You will update this secrets =>")
 	oldSecretsM, newSecretsM := mapSecretsToMap(oldSecrets), mapSecretsToMap(newSecrets)
 
 	for k, secret := range newSecretsM {
-
 		o, ok := oldSecretsM[k]
 		if !ok {
-			fmt.Println("Secrets", secret.Key, "is new with this value :", secret.Value)
-		} else if o.Value != secret.Value {
-			fmt.Println("Secrets", secret.Key, "change from", o.Value, "to", secret.Value)
+			fmt.Println("Secrets", secret.GetKey(), "is new with this value :", secret)
+		} else if o.Diff(secret) {
+			fmt.Println("Secrets", secret.GetKey(), "change from", o.ToJson(), "to", secret.ToJson())
 		}
 
 	}
 
 }
 
-func mapSecretsToMap(secrets []common.Secret) map[string]common.Secret {
+func mapSecretsToMap(secrets []common.SecretI) map[string]common.SecretI {
 
-	m := make(map[string]common.Secret)
+	m := make(map[string]common.SecretI)
 
 	for _, secret := range secrets {
-		m[secret.Key] = secret
+		m[secret.GetKey()] = secret
 	}
 
 	return m
-
 }
 
 func init() {
-
 	UpdateCmd.Flags().StringVarP(&regex, "regex", "r", "", "Help message for toggle")
-
-	UpdateCmd.Flags().StringVar(&keystore, "ks", "", "name of keystore")
-	UpdateCmd.MarkFlagRequired("ks")
 }
