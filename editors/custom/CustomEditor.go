@@ -3,25 +3,22 @@ package custom
 import (
 	"github.com/MehrunesSky/gecrets/common"
 	editorUtils "github.com/MehrunesSky/gecrets/editors/utils"
+	"github.com/MehrunesSky/gecrets/utils"
 	"log"
-	"os"
-	"os/exec"
 )
 
 type Custom struct {
-	cmd   string
-	model common.SecretI
+	cmd      string
+	executor utils.Executor
+	model    common.SecretI
 }
 
 func NewCustom(cmd string, model common.SecretI) *Custom {
-	return &Custom{cmd: cmd, model: model}
+	return &Custom{cmd: cmd, model: model, executor: utils.OsExecutor{}}
 }
 
 func (v *Custom) exec(filepath string) {
-	cmd := exec.Command(v.cmd, filepath)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	err := cmd.Run()
+	err := v.executor.Execute(v.cmd, filepath)
 	if err != nil {
 		log.Fatalln(err)
 	}
