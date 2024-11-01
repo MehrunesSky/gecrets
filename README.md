@@ -25,6 +25,16 @@ export PATH=$PATH:$(pwd)
 
 ## Usage
 
+### Azure
+
+#### Prerequisites
+
+Before using Gecrets, you must be logged in to Azure. Run the following command to authenticate:
+
+```shell
+az login
+```
+
 To show secrets, use the following command:
 ```shell
 gecrets list --ks <keyStoreName>
