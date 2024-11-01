@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/MehrunesSky/gecrets/cmd/list"
 	"github.com/MehrunesSky/gecrets/cmd/update"
+	"github.com/carlmjohnson/versioninfo"
+	"github.com/spf13/cobra"
 	"log"
 	"os"
-
-	"github.com/spf13/cobra"
+	"time"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -34,6 +36,12 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.Version = fmt.Sprintf(
+		"%s (Built on %s from Git SHA %s)",
+		versioninfo.Version,
+		versioninfo.Revision,
+		versioninfo.LastCommit.Format(time.RFC3339),
+	)
 	rootCmd.AddCommand(update.UpdateCmd)
 	rootCmd.AddCommand(list.ListCmd)
 	// Here you will define your flags and configuration settings.
