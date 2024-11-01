@@ -3,12 +3,12 @@ package utils
 import (
 	"fmt"
 	"github.com/MehrunesSky/gecrets/common"
+	"github.com/MehrunesSky/gecrets/utils"
 	"log"
-	"os"
 	"strings"
 )
 
-func WriteTempFile(model common.SecretI, secrets []common.SecretI) string {
+func WriteTempFile(fileService utils.FileService, model common.SecretI, secrets []common.SecretI) string {
 	s := strings.Builder{}
 
 	s.WriteString(fmt.Sprintf("#" + model.ToJson() + "\n"))
@@ -16,20 +16,20 @@ func WriteTempFile(model common.SecretI, secrets []common.SecretI) string {
 		s.WriteString(fmt.Sprintf("%s\n", p.ToJson()))
 	}
 
-	f, err := os.CreateTemp("", "")
+	f, err := fileService.CreateTempFile()
 
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	defer func(f *os.File) {
+	defer func(f utils.File) {
 		err := f.Close()
 		if err != nil {
 			log.Fatalln(err)
 		}
 	}(f)
 
-	defer func(f *os.File) {
+	defer func(f utils.File) {
 		err := f.Sync()
 		if err != nil {
 			log.Fatalln(err)

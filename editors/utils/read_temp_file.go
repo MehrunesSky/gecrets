@@ -3,13 +3,13 @@ package utils
 import (
 	"bufio"
 	"github.com/MehrunesSky/gecrets/common"
+	"github.com/MehrunesSky/gecrets/utils"
 	"log"
-	"os"
 	"strings"
 )
 
-func ReadSecrets(model common.SecretI, filepath string) []common.SecretI {
-	f, err := os.Open(filepath)
+func ReadSecrets(readFileService utils.FileOpenerService, model common.SecretI, filepath string) []common.SecretI {
+	f, err := readFileService.OpenFile(filepath)
 	if err != nil {
 		log.Fatalln(err)
 	}
