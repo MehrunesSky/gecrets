@@ -46,11 +46,7 @@ func init() {
 		log.Fatalln(err)
 	}
 
-	rootCmd.PersistentFlags().StringP("editor", "e", "", "Editor")
-	err = rootCmd.MarkPersistentFlagRequired("editor")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	rootCmd.PersistentFlags().StringP("editor", "e", "vim", "Editor")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

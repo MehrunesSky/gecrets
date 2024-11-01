@@ -35,7 +35,7 @@ to quickly create a Cobra application.`,
 		if regex != "" {
 			secretOptions = &keyvaults.GetSecretsOption{Regex: regexp.MustCompile(regex)}
 		}
-		pairs, err := v.GetSecrets(secretOptions)
+		oldSecrets, err := v.GetSecrets(secretOptions)
 
 		if err != nil {
 			return err
@@ -45,12 +45,19 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return err
 		}
-		nPairs := editor.Update(pairs)
+		newSecrets := editor.Update(oldSecrets)
 
-		printSecretsChange(pairs, nPairs)
+		new, changed := getChangedSecret(oldSecrets, newSecrets)
+
+		if len(new) == 0 && len(changed) == 0 {
+			fmt.Println("No change")
+			return nil
+		}
+
+		printSecretsChange(new, changed)
 
 		if utils.PromptYesNo("Would you like to apply this change?") {
-			for _, p := range nPairs {
+			for _, p := range newSecrets {
 				v.SetSecretValue(p)
 			}
 		} else {
@@ -61,18 +68,48 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func printSecretsChange(oldSecrets, newSecrets []common.SecretI) {
-	fmt.Println("You will update this secrets =>")
+type Changed struct {
+	Key      string
+	OldValue string
+	NewValue string
+	New      bool
+}
+
+func NewChanged(key string, oldValue string, newValue string, new bool) Changed {
+	return Changed{Key: key, OldValue: oldValue, NewValue: newValue, New: new}
+}
+
+func getChangedSecret(oldSecrets, newSecrets []common.SecretI) (new []Changed, changed []Changed) {
 	oldSecretsM, newSecretsM := mapSecretsToMap(oldSecrets), mapSecretsToMap(newSecrets)
 
 	for k, secret := range newSecretsM {
 		o, ok := oldSecretsM[k]
 		if !ok {
 			fmt.Println("Secrets", secret.GetKey(), "is new with this value :", secret)
+			new = append(
+				new,
+				NewChanged(secret.GetKey(), "", secret.ToJson(), true),
+			)
 		} else if o.Diff(secret) {
-			fmt.Println("Secrets", secret.GetKey(), "change from", o.ToJson(), "to", secret.ToJson())
+			changed = append(
+				changed,
+				NewChanged(secret.GetKey(), o.ToJson(), secret.ToJson(), false),
+			)
 		}
 
+	}
+	return new, changed
+}
+
+func printSecretsChange(newSecrets, updateSecrets []Changed) {
+	fmt.Println("You will update this secrets =>")
+
+	for _, secret := range newSecrets {
+		fmt.Println("Secrets", secret.Key, "is new with this value :", secret.NewValue)
+	}
+
+	for _, secret := range updateSecrets {
+		fmt.Println("Secrets", secret.Key, "change from", secret.OldValue, "to", secret.NewValue)
 	}
 
 }

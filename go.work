@@ -11,4 +11,5 @@ use (
 	editors/utils
 	editors
 	editors/idea
+	editors/custom
 )
