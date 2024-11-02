@@ -47,7 +47,7 @@ to quickly create a Cobra application.`,
 		}
 		newSecrets := editor.Update(oldSecrets)
 
-		new, changed := getChangedSecret(oldSecrets, newSecrets)
+		new, changed := oldSecrets.GetChangedSecrets(newSecrets)
 
 		if len(new) == 0 && len(changed) == 0 {
 			fmt.Println("No change")
@@ -68,40 +68,7 @@ to quickly create a Cobra application.`,
 	},
 }
 
-type Changed struct {
-	Key      string
-	OldValue string
-	NewValue string
-	New      bool
-}
-
-func NewChanged(key string, oldValue string, newValue string, new bool) Changed {
-	return Changed{Key: key, OldValue: oldValue, NewValue: newValue, New: new}
-}
-
-func getChangedSecret(oldSecrets, newSecrets []common.SecretI) (new []Changed, changed []Changed) {
-	oldSecretsM, newSecretsM := mapSecretsToMap(oldSecrets), mapSecretsToMap(newSecrets)
-
-	for k, secret := range newSecretsM {
-		o, ok := oldSecretsM[k]
-		if !ok {
-			fmt.Println("Secrets", secret.GetKey(), "is new with this value :", secret)
-			new = append(
-				new,
-				NewChanged(secret.GetKey(), "", secret.ToJson(), true),
-			)
-		} else if o.Diff(secret) {
-			changed = append(
-				changed,
-				NewChanged(secret.GetKey(), o.ToJson(), secret.ToJson(), false),
-			)
-		}
-
-	}
-	return new, changed
-}
-
-func printSecretsChange(newSecrets, updateSecrets []Changed) {
+func printSecretsChange(newSecrets, updateSecrets []common.Changed) {
 	fmt.Println("You will update this secrets =>")
 
 	for _, secret := range newSecrets {
@@ -112,17 +79,6 @@ func printSecretsChange(newSecrets, updateSecrets []Changed) {
 		fmt.Println("Secrets", secret.Key, "change from", secret.OldValue, "to", secret.NewValue)
 	}
 
-}
-
-func mapSecretsToMap(secrets []common.SecretI) map[string]common.SecretI {
-
-	m := make(map[string]common.SecretI)
-
-	for _, secret := range secrets {
-		m[secret.GetKey()] = secret
-	}
-
-	return m
 }
 
 func init() {

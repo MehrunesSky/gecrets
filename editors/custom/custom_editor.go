@@ -1,10 +1,13 @@
 package custom
 
 import (
+	"bufio"
+	"fmt"
 	"github.com/MehrunesSky/gecrets/common"
 	editorUtils "github.com/MehrunesSky/gecrets/editors/utils"
 	"github.com/MehrunesSky/gecrets/utils"
 	"log"
+	"strings"
 )
 
 type Custom struct {
@@ -33,15 +36,65 @@ func (v *Custom) exec(filepath string) {
 }
 
 func (v *Custom) Open(secrets []common.SecretI) {
-	filepath := editorUtils.WriteTempFile(v.fileService, v.model, secrets)
+	filepath := v.Write(secrets)
 	v.exec(filepath)
 }
 
 func (v *Custom) Update(secrets []common.SecretI) []common.SecretI {
-	filepath := editorUtils.WriteTempFile(v.fileService, v.model, secrets)
+	filepath := v.Write(secrets)
 
 	v.exec(filepath)
 
-	return editorUtils.ReadSecrets(v.fileOpenerService, v.model, filepath)
+	return v.ReadSecrets(filepath)
+}
 
+func (v *Custom) ReadSecrets(filepath string) common.SecretIs {
+	f, err := v.fileOpenerService.OpenFile(filepath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	b := bufio.NewScanner(f)
+
+	var pairs common.SecretIs
+	for b.Scan() {
+		if strings.HasPrefix(b.Text(), "#") {
+			continue
+		}
+		nP := editorUtils.Unmarshal(v.model, b.Bytes())
+		pairs = append(pairs, nP)
+	}
+	return pairs
+}
+
+func (v *Custom) Write(secrets common.SecretIs) string {
+	s := strings.Builder{}
+
+	s.WriteString(fmt.Sprintf("#" + v.model.ToJson() + "\n"))
+	for _, p := range secrets {
+		s.WriteString(fmt.Sprintf("%s\n", p.ToJson()))
+	}
+
+	f, err := v.fileService.CreateTempFile()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	defer func(f utils.File) {
+		err := f.Close()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}(f)
+
+	defer func(f utils.File) {
+		err := f.Sync()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}(f)
+
+	_, err = f.WriteString(s.String())
+
+	return f.Name()
 }

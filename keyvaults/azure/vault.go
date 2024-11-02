@@ -53,7 +53,7 @@ func (v Vault) GetSecretIds() []string {
 	return ret
 }
 
-func (v Vault) GetSecrets(getSecretOption *keyvaults.GetSecretsOption) ([]common.SecretI, error) {
+func (v Vault) GetSecrets(getSecretOption *keyvaults.GetSecretsOption) (common.SecretIs, error) {
 	var ret []common.SecretI
 	pager := v.client.NewListSecretsPager(nil)
 	for pager.More() {
