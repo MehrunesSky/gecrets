@@ -55,7 +55,7 @@ func (o *TestFileService) CreateTempFile() (utils.File, error) {
 	return args.Get(0).(utils.File), args.Error(1)
 }
 
-func NewCustomTest(cmd string, model common.SecretI, executor *TestExecutor, fileService *TestFileService) *Custom {
+func NewCustomTest(cmd []string, model common.SecretI, executor *TestExecutor, fileService *TestFileService) *Custom {
 	return &Custom{
 		cmd:               cmd,
 		model:             model,
@@ -70,7 +70,7 @@ func TestCustom_ReadSecrets(t *testing.T) {
 	fileService := new(TestFileService)
 
 	cut := NewCustomTest(
-		"",
+		[]string{""},
 		&azure.AzureSecret{},
 		executor,
 		fileService,
@@ -112,7 +112,7 @@ func TestCustom_Write(t *testing.T) {
 	file.On("Close").Return(nil)
 
 	cut := NewCustomTest(
-		"",
+		[]string{""},
 		&azure.AzureSecret{},
 		executor,
 		fileService,
