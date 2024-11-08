@@ -11,14 +11,14 @@ import (
 )
 
 type Custom struct {
-	cmd               string
+	cmd               []string
 	executor          utils.Executor
 	model             common.SecretI
 	fileService       utils.FileService
 	fileOpenerService utils.FileOpenerService
 }
 
-func NewCustom(cmd string, model common.SecretI) *Custom {
+func NewCustom(model common.SecretI, cmd ...string) *Custom {
 	return &Custom{
 		cmd:               cmd,
 		model:             model,
@@ -29,7 +29,10 @@ func NewCustom(cmd string, model common.SecretI) *Custom {
 }
 
 func (v *Custom) exec(filepath string) {
-	err := v.executor.Execute(v.cmd, filepath)
+	var cmds []string
+	cmds = append(cmds, v.cmd...)
+	cmds = append(cmds, filepath)
+	err := v.executor.Execute(cmds[0], cmds[1:]...)
 	if err != nil {
 		log.Fatalln(err)
 	}

@@ -10,5 +10,5 @@ type IdeaExec struct {
 }
 
 func NewIdeaExec(model common.SecretI) *IdeaExec {
-	return &IdeaExec{*custom.NewCustom("idea --wait", model)}
+	return &IdeaExec{*custom.NewCustom(model, "bash", "-c", "idea --wait")}
 }

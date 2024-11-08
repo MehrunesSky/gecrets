@@ -123,7 +123,7 @@ func TestCustom_Write(t *testing.T) {
 	}
 	path := cut.Write(secrets)
 
-	assert.Equal(t, "Paths", path)
+	assert.Equal(t, "Path", path)
 	fileService.AssertExpectations(t)
 	file.AssertExpectations(t)
 

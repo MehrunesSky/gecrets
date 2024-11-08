@@ -12,7 +12,7 @@ import (
 
 type Vault struct {
 	KeyVaultName string
-	client       *azsecrets.Client
+	client       client
 }
 
 func (v Vault) GetSecretModel() common.SecretI {
@@ -34,7 +34,7 @@ func NewVault(keyVaultName string) Vault {
 	}
 	return Vault{
 		KeyVaultName: keyVaultName,
-		client:       client,
+		client:       azureClient{client},
 	}
 }
 

@@ -10,5 +10,5 @@ type VimExec struct {
 }
 
 func NewVimExec(model common.SecretI) *VimExec {
-	return &VimExec{*custom.NewCustom("vim", model)}
+	return &VimExec{*custom.NewCustom(model, "vim")}
 }

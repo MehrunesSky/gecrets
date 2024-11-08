@@ -4,7 +4,7 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package list
 
 import (
-	"github.com/MehrunesSky/gecrets/editors/vim"
+	"github.com/MehrunesSky/gecrets/editors"
 	"github.com/MehrunesSky/gecrets/keyvaults"
 	"github.com/MehrunesSky/gecrets/keyvaults/azure"
 	"regexp"
@@ -36,7 +36,14 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return err
 		}
-		vim.NewVimExec(v.GetSecretModel()).Open(secrets)
+
+		editorName, _ := cmd.Flags().GetString("editor")
+		editor, err := editors.GetEditorByName(editorName, v.GetSecretModel())
+
+		if err != nil {
+			return err
+		}
+		editor.Open(secrets)
 
 		return nil
 	},
