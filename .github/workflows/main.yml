@@ -1,7 +1,8 @@
-name: Static Analysis and Report
+name: Main
 on:
-  pull_request:
-    types: [ opened, synchronize, reopened ]
+  push:
+    branches:
+      - main
 
 
 jobs:
@@ -23,11 +24,6 @@ jobs:
           args: build --clean --single-target --skip validate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-#      - name: Run Gosec Security Scanner
-#        run: |
-#          go install github.com/securego/gosec/cmd/gosec
-#          gosec -no-fail -fmt=sonarqube -out report.json ./...
 
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
