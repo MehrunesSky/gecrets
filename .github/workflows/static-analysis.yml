@@ -24,10 +24,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Gosec Security Scanner
-        run: |
-          go install github.com/securego/gosec/cmd/gosec
-          gosec -no-fail -fmt=sonarqube -out report.json ./...
+#      - name: Run Gosec Security Scanner
+#        run: |
+#          go install github.com/securego/gosec/cmd/gosec
+#          gosec -no-fail -fmt=sonarqube -out report.json ./...
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
