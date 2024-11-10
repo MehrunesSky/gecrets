@@ -1,4 +1,7 @@
 # Gecrets
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=MehrunesSky_gecrets&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=MehrunesSky_gecrets)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=MehrunesSky_gecrets&metric=coverage)](https://sonarcloud.io/summary/new_code?id=MehrunesSky_gecrets)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=MehrunesSky_gecrets&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=MehrunesSky_gecrets)
 
 Gecrets is a Go application that allows you to edit sensitive secrets directly from the command line using VIM. It’s designed to simplify the management and updating of secrets while ensuring security.
 Features

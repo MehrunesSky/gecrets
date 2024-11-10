@@ -25,7 +25,12 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		v := azure.NewVault(keystore)
-		r, _ := cmd.Flags().GetString("regex")
+		r, err := cmd.Flags().GetString("regex")
+
+		if err != nil {
+			return err
+		}
+
 		var secretOptions *keyvaults.GetSecretsOption
 		if r != "" {
 			secretOptions = &keyvaults.GetSecretsOption{

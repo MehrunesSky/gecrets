@@ -7,9 +7,10 @@ import (
 	"github.com/MehrunesSky/gecrets/editors/vim"
 )
 
+//go:generate go run -mod=mod github.com/vektra/mockery/v2 --name EditorService --inpackage --inpackage-suffix
 type EditorService interface {
-	Open(secrets []common.SecretI)
-	Update(secrets []common.SecretI) []common.SecretI
+	Open(secrets common.SecretIs)
+	Update(secrets common.SecretIs) common.SecretIs
 }
 
 func GetEditorByName(name string, model common.SecretI) (EditorService, error) {

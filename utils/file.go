@@ -3,6 +3,7 @@ package utils
 import (
 	"io"
 	"os"
+	"path/filepath"
 )
 
 type File interface {
@@ -44,7 +45,7 @@ func (o OsFileService) CreateTempFile() (File, error) {
 }
 
 func (o OsFileService) OpenFile(path string) (File, error) {
-	f, err := os.Open(path)
+	f, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return nil, err
 	}
