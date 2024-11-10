@@ -18,54 +18,74 @@ import (
 var regex string
 
 // UpdateCmd represents the update command
-var UpdateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "Key brief description of your command",
-	Long: `Key longer description that spans multiple lines and likely contains examples
+var UpdateCmd = NewUpdateCmd(
+	func(s string) keyvaults.KeyVaultService {
+		return azure.NewVault(s)
+	},
+	func(s string, model common.SecretI) (editors.EditorService, error) {
+		return editors.GetEditorByName(s, model)
+	},
+)
+
+func NewUpdateCmd(keyVaultService func(string) keyvaults.KeyVaultService,
+	editorService func(string, common.SecretI) (editors.EditorService, error)) *cobra.Command {
+
+	return &cobra.Command{
+		Use:   "update",
+		Short: "Key brief description of your command",
+		Long: `Key longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		ks, _ := cmd.Flags().GetString("ks")
-		editorName, _ := cmd.Flags().GetString("editor")
-		v := azure.NewVault(ks)
-		var secretOptions *keyvaults.GetSecretsOption
-		if regex != "" {
-			secretOptions = &keyvaults.GetSecretsOption{Regex: regexp.MustCompile(regex)}
-		}
-		oldSecrets, err := v.GetSecrets(secretOptions)
-
-		if err != nil {
-			return err
-		}
-
-		editor, err := editors.GetEditorByName(editorName, v.GetSecretModel())
-		if err != nil {
-			return err
-		}
-		newSecrets := editor.Update(oldSecrets)
-
-		new, changed := oldSecrets.GetChangedSecrets(newSecrets)
-
-		if len(new) == 0 && len(changed) == 0 {
-			fmt.Println("No change")
-			return nil
-		}
-
-		printSecretsChange(new, changed)
-
-		if utils.PromptYesNo("Would you like to apply this change?") {
-			for _, p := range newSecrets {
-				v.SetSecretValue(p)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ks, err := cmd.Flags().GetString("ks")
+			if err != nil {
+				return err
 			}
-		} else {
-			log.Println("NO")
-		}
 
-		return nil
-	},
+			editorName, err := cmd.Flags().GetString("editor")
+			if err != nil {
+				return err
+			}
+			v := keyVaultService(ks)
+			var secretOptions *keyvaults.GetSecretsOption
+			if regex != "" {
+				secretOptions = &keyvaults.GetSecretsOption{Regex: regexp.MustCompile(regex)}
+			}
+			oldSecrets, err := v.GetSecrets(secretOptions)
+
+			if err != nil {
+				return err
+			}
+
+			editor, err := editorService(editorName, v.GetSecretModel())
+			if err != nil {
+				return err
+			}
+			newSecrets := editor.Update(oldSecrets)
+
+			new, changed := oldSecrets.GetChangedSecrets(newSecrets)
+
+			if len(new) == 0 && len(changed) == 0 {
+				fmt.Println("No change")
+				return nil
+			}
+
+			printSecretsChange(new, changed)
+
+			if utils.PromptYesNo("Would you like to apply this change?") {
+				for _, p := range newSecrets {
+					v.SetSecretValue(p)
+				}
+			} else {
+				log.Println("NO")
+			}
+
+			return nil
+		},
+	}
 }
 
 func printSecretsChange(newSecrets, updateSecrets []common.Changed) {
@@ -82,5 +102,6 @@ func printSecretsChange(newSecrets, updateSecrets []common.Changed) {
 }
 
 func init() {
+
 	UpdateCmd.Flags().StringVarP(&regex, "regex", "r", "", "Help message for toggle")
 }

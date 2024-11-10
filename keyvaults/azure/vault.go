@@ -61,24 +61,34 @@ func (v Vault) GetSecrets(getSecretOption *keyvaults.GetSecretsOption) (common.S
 		if err != nil {
 			return nil, err
 		}
-		for _, secret := range resp.SecretListResult.Value {
-			secretName := secret.ID.Name()
-			if getSecretOption == nil || getSecretOption.Regex.MatchString(secretName) {
-				value, err := v.GetSecretValue(secretName)
-				if err != nil {
-					return nil, err
-				}
-				contentType := ""
+		secrets, err := v.getSecretsFromPage(resp, getSecretOption)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, secrets...)
+	}
+	return ret, nil
+}
 
-				if secret.ContentType != nil {
-					contentType = *secret.ContentType
-				}
+func (v Vault) getSecretsFromPage(resp azsecrets.ListSecretsResponse, getSecretOption *keyvaults.GetSecretsOption) (
+	ret common.SecretIs, _ error) {
 
-				ret = append(
-					ret,
-					NewAzureSecret(secretName, value, contentType),
-				)
+	for _, secret := range resp.SecretListResult.Value {
+		secretName := secret.ID.Name()
+		if getSecretOption == nil || getSecretOption.Regex.MatchString(secretName) {
+			value, err := v.GetSecretValue(secretName)
+			if err != nil {
+				return nil, err
 			}
+			contentType := ""
+
+			if secret.ContentType != nil {
+				contentType = *secret.ContentType
+			}
+			ret = append(
+				ret,
+				NewAzureSecret(secretName, value, contentType),
+			)
 		}
 	}
 	return ret, nil

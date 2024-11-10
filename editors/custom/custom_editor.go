@@ -38,12 +38,12 @@ func (v *Custom) exec(filepath string) {
 	}
 }
 
-func (v *Custom) Open(secrets []common.SecretI) {
+func (v *Custom) Open(secrets common.SecretIs) {
 	filepath := v.Write(secrets)
 	v.exec(filepath)
 }
 
-func (v *Custom) Update(secrets []common.SecretI) []common.SecretI {
+func (v *Custom) Update(secrets common.SecretIs) common.SecretIs {
 	filepath := v.Write(secrets)
 
 	v.exec(filepath)
